@@ -41,3 +41,34 @@ exports.deleteRoomValidator=[
             .isMongoId().withMessage('Invalid Room id format')
         
     ,validatorMiddleware];
+
+exports.joinRoomValidator=[
+        check('id')
+                .notEmpty().withMessage("id is required")
+                .isMongoId().withMessage('Invalid Room id format')
+
+        ,validatorMiddleware
+        ];
+
+exports.leaveRoomValidator=[
+        check('id')
+                .notEmpty().withMessage("id is required")
+                .isMongoId().withMessage('Invalid Room id format')
+        ,validatorMiddleware
+];
+
+exports.getUsersInRoomValidator=[
+        check('id')
+                .notEmpty().withMessage("id is required")
+                .isMongoId().withMessage('Invalid Room id format')
+                .custom(
+                        (val,{req})=>{
+                        return Room.findById(req.params.id)
+                        .then(room=>{
+                                return room.users.includes( req.user._id );
+                        });
+                        }
+    
+        ).withMessage('You are not allowed to get users data')
+        ,validatorMiddleware
+];

@@ -6,6 +6,9 @@ const {
     getRoomValidator,
     updateRoomValidator,
     deleteRoomValidator,
+    joinRoomValidator,
+    leaveRoomValidator,
+    getUsersInRoomValidator
 
 }=require("../utils/validators/roomValidator")
 
@@ -16,6 +19,9 @@ const {
     getRooms,
     updateRoom,
     deleteRoom,
+    joinRoom,
+    leaveRoom,
+    getUsersInRoom,
     
 }=require("../services/roomService");
 
@@ -50,7 +56,11 @@ router.route('/:id')
                         deleteRoomValidator,
                         deleteRoom
                     );
-                    
+router.route('/join/:id').post(allowedTo('user'),joinRoomValidator,joinRoom);
+
+router.route('/leave/:id').post(allowedTo('user'),leaveRoomValidator,leaveRoom);
+
+router.route('/getUsers/:id').get(getUsersInRoomValidator,getUsersInRoom);
 
 
 
