@@ -15,3 +15,23 @@ exports.sanitizeUsers = function(users) {
     }));
   };
   
+  exports.sanitizeMessages = function(messages) {
+    return messages.map(message => ({
+      _id: message._id,
+      sender:message.userId,
+      room: message.roomId,
+      content: message.content,
+      createdAt: message.createdAt
+    }));
+  };
+
+  exports.sanitizePrivateMessages = function(messages) {
+    return messages.map(message => ({
+      _id: message._id,
+      sender:message.userId,
+      recipient: message.roomId,
+      content: message.content,
+      createdAt: message.createdAt
+    }));
+  };
+  
