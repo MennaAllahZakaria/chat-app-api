@@ -3,10 +3,15 @@ const express=require('express');
 const router=express.Router();
 
 const{
-    getChatstHistoryOfRoom,
-    getChatstHistoryOfPrivateChat,
+    getRoomChatstHistory,
+    getPrivateChatstHistory,
 
 }=require('../services/chatService');
+
+const {
+    getRoomChatHistoryValidator,
+    getPrivateChatHistoryValidator
+}=require('../utils/validators/chatValidator');
 
 const{
     protect,
@@ -18,8 +23,14 @@ router.use(
     allowedTo('user','admin')
 );
 
-router.route('/').get(getChatstHistoryOfRoom);
+router.route('/').get(
+    getRoomChatHistoryValidator,
+    getRoomChatstHistory
+);
 
-router.route('/private').get(getChatstHistoryOfPrivateChat);
+router.route('/private').get(
+    getPrivateChatHistoryValidator,
+    getPrivateChatstHistory
+);
 
 module.exports=router;

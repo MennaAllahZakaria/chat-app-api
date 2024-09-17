@@ -12,7 +12,7 @@ const {sanitizeMessages,sanitizePrivateMessages}=require('../utils/sanitizeData'
 // @route   GET  /api/v1/chats
 // @access  Private(user)
 
-exports.getChatstHistoryOfRoom=asyncHandler(async(req,res,next)=>{
+exports.getRoomChatstHistory=asyncHandler(async(req,res,next)=>{
 
     const roomId=req.body.roomId;
     const room=await Room.findById(roomId);
@@ -37,7 +37,7 @@ exports.getChatstHistoryOfRoom=asyncHandler(async(req,res,next)=>{
 // @route   GET  /api/v1/chats/private
 // @access  Private(user)
 
-exports.getChatstHistoryOfPrivateChat=asyncHandler(async(req,res,next)=>{
+exports.getPrivateChatstHistory=asyncHandler(async(req,res,next)=>{
 
     const userId=req.body.usererId;
     const loggedUserId=req.User._id;
