@@ -4,9 +4,14 @@ const express=require("express");
 const cors=require('cors');
 const compression=require('compression');
 
+const http = require('http');
+const socketIo = require('socket.io');
+const socketHandlers = require('./socket/socket');
+
 const dotenv=require("dotenv");
 const morgan=require("morgan");
 
+// Load environment variables
 dotenv.config({path:"config.env"});
 
 const dbConnection=require('./config/database');
@@ -25,15 +30,22 @@ app.options('*',cors());
 //compression -> compress all responses
 app.use(compression());
 
-
+const server = http.createServer(app);
+const io = socketIo(server);
 // connect to DB
 dbConnection();
 
 app.use(express.json());
 
+// HTTP request logger for development
+app.use(morgan('dev'));
+
 //Mount route
 
 mountRoutes(app);
+
+// Initialize socket handlers
+socketHandlers(io);
 
 app.all('*',(req,res,next)=>{
     // create error and send it to error handling middleware
@@ -45,7 +57,7 @@ app.all('*',(req,res,next)=>{
 
     const PORT=process.env.PORT|| 5000;
 
-    const server= app.listen(PORT,()=>{
+    server.listen(PORT,()=>{
         console.log(`App Running on port ${PORT}`);
     });
 
