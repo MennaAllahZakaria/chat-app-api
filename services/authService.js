@@ -69,7 +69,8 @@ exports.signup = asyncHandler(async (req, res, next) => {
         message: "Verification code sent to your email.",
         token,
         });
-    } catch {
+    } catch(error) {
+        console.error("Error sending email:", error);
         return next(new ApiError("There is an error in sending email", 500));
     }
 });

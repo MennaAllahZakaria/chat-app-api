@@ -37,6 +37,33 @@ dbConnection();
 
 app.use(express.json());
 
+app.use(express.urlencoded({extended:true})); // form-data
+const Verification = require("./models/codeModel");
+
+const deleteExpiredVerifications = async () => {
+    const now = new Date();
+
+    try {
+        // Find all expired records
+        const expiredVerifications = await Verification.find({
+        expiresAt: { $lt: now },
+        });
+
+        // Delete all expired records
+        await Verification.deleteMany({
+        _id: { $in: expiredVerifications.map((v) => v._id) },
+        });
+
+        console.log(
+        `${expiredVerifications.length} expired verifications deleted.`
+        );
+    } catch (err) {
+        console.error("Error deleting expired verifications:", err);
+    }
+};
+
+// Call the function
+deleteExpiredVerifications();
 // HTTP request logger for development
 app.use(morgan('dev'));
 
