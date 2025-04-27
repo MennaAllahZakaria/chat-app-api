@@ -31,7 +31,13 @@ app.options('*',cors());
 app.use(compression());
 
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
 // connect to DB
 dbConnection();
 
