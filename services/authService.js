@@ -6,7 +6,7 @@ const ApiError = require("../utils/ApiError")
 const sendEmail=require("../utils/sendEmail")
 
 const User = require('../models/userModel');
-const Verification = require("../../models/codeModel");
+const Verification = require("../models/codeModel");
 const createToken=require('../utils/createToken');
 const {sanitizeUser}=require('../utils/sanitizeData');
 
