@@ -9,6 +9,9 @@ const {
 
 const {
     signup,
+    verifyEmailUser,
+    protectforget,
+    protectCode,
     login,
     forgotPassword,
     verifyPassResetCode,
@@ -21,6 +24,7 @@ router.post('/signup',
                     signupValidator,
                     signup
                 );
+router.post("/verifyEmailUser", protectCode, verifyEmailUser);
 
 router.post('/login',
                     loginValidator,
@@ -28,7 +32,7 @@ router.post('/login',
                 );
 
 router.post('/forgotPassword',forgotPassword);   
-router.post('/verifyResetCode',verifyPassResetCode)
-router.put("/resetPassword",resetPassword)
+router.post('/verifyResetCode', protectforget,verifyPassResetCode)
+router.put("/resetPassword", protectforget, resetPassword)
 
 module.exports=router;

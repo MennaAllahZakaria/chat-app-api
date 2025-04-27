@@ -58,12 +58,12 @@ const userSchema=new mongoose.Schema({
 },
 {timestamps:true});
 
-userSchema.pre('save',async function(next){
-    if (!this.isModified("password")) return next();
+// userSchema.pre('save',async function(next){
+//     if (!this.isModified("password")) return next();
     
-    this.password=await bcrypt.hash(this.password,12);
-    next();
-})
+//     this.password=await bcrypt.hash(this.password,12);
+//     next();
+// })
 
 // eslint-disable-next-line new-cap
 const UserModel= new mongoose.model("User",userSchema);
