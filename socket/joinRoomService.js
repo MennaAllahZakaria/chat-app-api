@@ -3,6 +3,10 @@ const Room = require('../models/roomModel');
 module.exports = (socket) => {
   socket.on('room:join', async ({ roomId }) => {
     try {
+      if (!mongoose.Types.ObjectId.isValid(roomId)) {
+        socket.emit('error', 'Invalid Room ID');
+        return;
+      }
       const room = await Room.findById(roomId);
       if (room) {
         socket.join(roomId);
