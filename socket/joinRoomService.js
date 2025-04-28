@@ -15,6 +15,7 @@ module.exports = (socket) => {
         socket.emit('error', 'Room not found');
       }
     } catch (error) {
+      console.error('Error joining room:', error);
       socket.emit('error', 'An error occurred while joining the room');
     }
   });
