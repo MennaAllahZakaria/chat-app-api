@@ -1,4 +1,5 @@
 const Room = require('../models/roomModel');
+const mongoose = require('mongoose');
 
 module.exports = (socket) => {
   socket.on('room:join', async ({ roomId }) => {
