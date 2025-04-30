@@ -25,7 +25,7 @@ module.exports = (socket, io) => {
   socket.on('private:send', async ({ recipientId, content }) => {
     try {
       if (!recipientId || !content || content.trim() === '') {
-        return socket.emit('error', 'Invalid recipient or content'+recipientId+content);
+        return socket.emit('error', recipientId);
       }
 
       const newMessage = await createPrivateMessage({
