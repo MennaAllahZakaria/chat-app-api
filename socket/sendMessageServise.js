@@ -1,6 +1,29 @@
 const { createMessageSocket,createPrivateMessageSocket } = require('../services/messageService');
+const socketConnection = require('./socket/socketConnection');
 
 module.exports = (socket, io) => {
+  // Verify connection and authentication
+  if (!socket.connected) {
+    console.error('Socket is not connected');
+    return;
+  }
+
+  if (!socket.user || !socket.user._id) {
+    console.error('Socket is not authenticated');
+    socket.emit('error', 'Authentication required');
+    return;
+  }
+
+  // Log successful connection
+  console.log(`Socket connected for user: ${socket.user.username} (${socket.user._id})`);
+
+  // Connection verification event
+  socket.emit('connection:verified', { 
+    status: 'connected',
+    userId: socket.user._id,
+    username: socket.user.username
+  });
+
   socket.on('message:send', async ({ roomId, content }) => {
     try {
       const newMessage = await createMessageSocket({
@@ -46,4 +69,30 @@ module.exports = (socket, io) => {
     }
   });
 
+  // When user logs in and gets a token
+  const token = 'YOUR_JWT_TOKEN'; // Get this from your login response
+
+  // Connect to socket
+  try {
+    socketConnection.connect(token);
+  } catch (error) {
+    console.error('Failed to connect to socket:', error);
+  }
+
+  // Join a room
+  socketConnection.joinRoom('roomId');
+
+  // Send a message
+  socketConnection.sendMessage('roomId', 'Hello everyone!');
+
+  // Send a private message
+  socketConnection.sendPrivateMessage('recipientId', 'Hello!');
+
+  // Typing indicators
+  socketConnection.startTyping('roomId');
+  // ... when user stops typing
+  socketConnection.stopTyping('roomId');
+
+  // Disconnect when needed
+  socketConnection.disconnect();
 };

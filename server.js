@@ -1,49 +1,55 @@
-const path=require('path');
-
-const express=require("express");
-const cors=require('cors');
-const compression=require('compression');
-
+const path = require('path');
+const express = require("express");
+const cors = require('cors');
+const compression = require('compression');
 const http = require('http');
 const socketIo = require('socket.io');
 const socketHandlers = require('./socket/socket');
 
-const dotenv=require("dotenv");
-const morgan=require("morgan");
+const dotenv = require("dotenv");
+const morgan = require("morgan");
 
 // Load environment variables
-dotenv.config({path:"config.env"});
+dotenv.config({ path: "config.env" });
 
-const dbConnection=require('./config/database');
-const ApiError=require("./utils/ApiError");
-const globalError=require('./middelwares/errorMiddleware');
+const dbConnection = require('./config/database');
+const ApiError = require("./utils/ApiError");
+const globalError = require('./middelwares/errorMiddleware');
+const mountRoutes = require('./routes/index');
 
-const mountRoutes=require('./routes/index')
+// Express app
+const app = express();
 
-//exress app
-const app=express();
+// CORS configuration
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true
+}));
 
-//cors -> other domains can access our app
-app.use(cors());
-app.options('*',cors());
-
-//compression -> compress all responses
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(compression());
+app.use(morgan('dev'));
 
+// Create HTTP server
 const server = http.createServer(app);
+
+// Socket.IO configuration
 const io = socketIo(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
-// connect to DB
+// Connect to DB
 dbConnection();
 
-app.use(express.json());
-
-app.use(express.urlencoded({extended:true})); // form-data
 const Verification = require("./models/codeModel");
 
 const deleteExpiredVerifications = async () => {
@@ -70,35 +76,32 @@ const deleteExpiredVerifications = async () => {
 
 // Call the function
 deleteExpiredVerifications();
-// HTTP request logger for development
-app.use(morgan('dev'));
 
-//Mount route
-
+// Mount routes
 mountRoutes(app);
 
 // Initialize socket handlers
 socketHandlers(io);
 
-app.all('*',(req,res,next)=>{
-    // create error and send it to error handling middleware
-        next(new ApiError(`cannot find this route : ${req.originalUrl}`,400))
-    });
+// Error handling middleware
+app.use(globalError);
 
-    // global error handling middleware
-    app.use(globalError);
+// Handle unhandled routes
+app.all('*', (req, res, next) => {
+  next(new ApiError(`Can't find this route: ${req.originalUrl}`, 400));
+});
 
-    const PORT=process.env.PORT|| 5000;
+const PORT = process.env.PORT || 5000;
 
-    server.listen(PORT,()=>{
-        console.log(`App Running on port ${PORT}`);
-    });
+server.listen(PORT, () => {
+  console.log(`App Running on port ${PORT}`);
+});
 
-    process.on("unhandledRejection",(err)=>{
-        console.log(`UnhandledRejection Errors: ${err}`);
-        server.close(()=>{
-            console.error('Shutting Down...');
-            process.exit(1);
-        })
-        
-    });
+// Handle unhandled rejections
+process.on("unhandledRejection", (err) => {
+  console.log(`UnhandledRejection Errors: ${err}`);
+  server.close(() => {
+    console.error('Shutting Down...');
+    process.exit(1);
+  });
+});
