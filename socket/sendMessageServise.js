@@ -1,5 +1,5 @@
 const { createMessageSocket,createPrivateMessageSocket } = require('../services/messageService');
-const socketConnection = require('./socket/socketConnection');
+const socketConnection = require('./socketConnection');
 
 module.exports = (socket, io) => {
   // Verify connection and authentication
