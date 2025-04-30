@@ -25,7 +25,30 @@ exports.createPrivateMessage=asyncHandler(async(req, res, next) => {
     res.status(201).json({ data: newMessage });
 
 });
+//---------------------------------CREATE SOCKET--------------------------------
+// @desc    Create Message Socket
 
+exports.createMessageSocket = async ({ roomId, userId, content }) => {
+    const message = await Message.create({
+        roomId,
+        userId,
+        content,
+        timestamp: Date.now()
+    });
+    return message;
+};
+
+// @desc    Create Private Message Socket
+exports.createPrivateMessageSocket = async ({ senderId, recipientId, content }) => {
+    const privateMessage = await Message.create({
+        senderId,
+        recipientId,
+        content,
+        isPrivate: true,
+        timestamp: Date.now()
+    });
+    return privateMessage;
+};
 //---------------------------------GET ONE--------------------------------
 
 // @desc    Get specific Message by id

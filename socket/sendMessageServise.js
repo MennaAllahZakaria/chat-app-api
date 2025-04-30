@@ -1,9 +1,9 @@
-const { createMessage,createPrivateMessage } = require('../services/messageService');
+const { createMessageSocket,createPrivateMessageSocket } = require('../services/messageService');
 
 module.exports = (socket, io) => {
   socket.on('message:send', async ({ roomId, content }) => {
     try {
-      const newMessage = await createMessage({
+      const newMessage = await createMessageSocket({
         roomId,
         userId: socket.user._id,
         content,
@@ -25,10 +25,10 @@ module.exports = (socket, io) => {
   socket.on('private:send', async ({ recipientId, content }) => {
     try {
       if (!recipientId || !content || content.trim() === '') {
-        return socket.emit('error', recipientId);
+        return socket.emit('error', `Recipient ID and content are required ${recipientId} , ${content}`);
       }
 
-      const newMessage = await createPrivateMessage({
+      const newMessage = await createPrivateMessageSocket({
         senderId: socket.user._id,
         recipientId,
         content,
