@@ -78,11 +78,11 @@ These endpoints handle user registration, login, and token acquisition.
 *   **Request Body:**
     ```json
     {
-        "verificationCode": "verification_code_sent_to_email"
+        "code": "verification_code_sent_to_email"
     }
     ```
 *   **Validation:**
-    *   `verificationCode`: Required.
+    *   `code`: Required.
 *   **Success Response (200 OK):**
     ```json
     {
@@ -762,10 +762,7 @@ The client (frontend) must establish a Socket.IO connection to the server.
 import io from 'socket.io-client';
 
 const socket = io('wss://chat-app-api-production-7f75.up.railway.app', {
-  // Additional options if needed
-  // !!! Important: Authentication mechanism is not entirely clear in the current code !!!
-  // You might need to send the JWT token as part of the connection options
-  // or via a custom event after connection. This needs clarification from the backend team.
+
   // Possible example (verify the correct method):
   auth: {
     token: "<YOUR_JWT_TOKEN>"
