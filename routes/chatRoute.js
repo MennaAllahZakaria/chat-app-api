@@ -23,7 +23,7 @@ router.use(
     allowedTo('user','admin')
 );
 
-router.route('/').get(
+router.route('/:roomId').get(
     getRoomChatHistoryValidator,
     getRoomChatstHistory
 );

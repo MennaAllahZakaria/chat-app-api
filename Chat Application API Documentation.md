@@ -693,11 +693,13 @@ These endpoints are used to retrieve the history of previous messages in rooms o
 
 ### 6.1. Get Room Chat History
 
-*   **Endpoint:** `/chats`
+*   **Endpoint:** `/chats/:roomId`
 *   **Method:** `GET`
 *   **Description:** Get the message history for a specific chat room.
-*   **Query Parameters:**
+*   **Params**
     *   `roomId` (Required): The ID of the room whose chat history is requested.
+
+*   **Query Parameters:**
     *   `page` (Optional): Page number for pagination.
     *   `limit` (Optional): Number of messages per page.
 *   **Success Response (200 OK):**

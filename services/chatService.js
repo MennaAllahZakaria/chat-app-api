@@ -14,7 +14,7 @@ const {sanitizeMessages,sanitizePrivateMessages}=require('../utils/sanitizeData'
 
 exports.getRoomChatstHistory=asyncHandler(async(req,res,next)=>{
 
-    const roomId=req.body.roomId;
+    const roomId=req.params.roomId;
     const room=await Room.findById(roomId);
     if(!room) return next(new ApiError('Room not found',404));
 
