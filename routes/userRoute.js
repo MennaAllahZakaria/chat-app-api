@@ -35,6 +35,7 @@ const{
 
 router.use(protect);
 
+router.get('/',getUser,getUser);
 router.get('/getMe',getLoggedUserData,getUser);
 router.put('/changeMyPassword', updateLoggedUserPassword);
 router.put('/updateMe',updateLoggedUserValidator, updateLoggedUserData);
@@ -48,9 +49,6 @@ router.put('/changePassword/:id',
 
 
 router.route('/')
-                .get(
-                    getUsers
-                )
                 .post(
                     uploadUserImage,
                     resizeImage,
