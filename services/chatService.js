@@ -39,7 +39,7 @@ exports.getRoomChatstHistory=asyncHandler(async(req,res,next)=>{
 
 exports.getPrivateChatstHistory=asyncHandler(async(req,res,next)=>{
 
-    const userId=req.body.usererId;
+    const userId=req.params.usererId;
     const loggedUserId=req.User._id;
 
     if(userId===loggedUserId){

@@ -28,7 +28,7 @@ router.route('/').get(
     getRoomChatstHistory
 );
 
-router.route('/private').get(
+router.route('/private/:userId').get(
     getPrivateChatHistoryValidator,
     getPrivateChatstHistory
 );

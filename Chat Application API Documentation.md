@@ -719,11 +719,11 @@ These endpoints are used to retrieve the history of previous messages in rooms o
 
 ### 6.2. Get Private Chat History
 
-*   **Endpoint:** `/chats/private`
+*   **Endpoint:** `/chats/private/:userId`
 *   **Method:** `GET`
 *   **Description:** Get the private message history between the current user and another specific user.
 *   **Query Parameters:**
-    *   `recipientId` (Required): The ID of the other user whose private chat history is requested.
+    *   `userId` (Required): The ID of the other user whose private chat history is requested.
     *   `page` (Optional): Page number for pagination.
     *   `limit` (Optional): Number of messages per page.
 *   **Success Response (200 OK):**
