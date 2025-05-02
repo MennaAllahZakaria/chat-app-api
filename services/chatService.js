@@ -40,7 +40,7 @@ exports.getRoomChatstHistory=asyncHandler(async(req,res,next)=>{
 exports.getPrivateChatstHistory=asyncHandler(async(req,res,next)=>{
 
     const userId=req.params.usererId;
-    const loggedUserId=req.User._id;
+    const loggedUserId=req.user._id;
 
     if(userId===loggedUserId){
         return next(new ApiError('You can not chat with yourself',400));
