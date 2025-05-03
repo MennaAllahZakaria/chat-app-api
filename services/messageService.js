@@ -76,6 +76,14 @@ exports.createPrivateMessageSocket = async ({ senderId, recipientId, content }) 
         }
     };
     
+exports.getAllMessagesBetweenUsers = async (userId) => {
+    return PrivateMessage.find({
+      $or: [
+        { senderId: userId },
+        { recipientId: userId }
+      ],
+    }).sort({ createdAt: 1 });  // ترتيب الرسائل حسب وقت الإنشاء
+  };
 //---------------------------------GET ONE--------------------------------
 
 // @desc    Get specific Message by id

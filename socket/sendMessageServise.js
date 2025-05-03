@@ -39,18 +39,19 @@ module.exports = (socket, io) => {
       if (!recipientId || !content || content.trim() === '') {
         return callback({ success: false, message: 'Recipient ID and content are required' });
       }
-  
+
       const userId = socket.user._id;
-  
+
       // تخزين الرسالة في الداتا بيز
       const newMessage = await createPrivateMessageSocket({
         senderId: userId,
         recipientId,
         content,
+        isSent: false, 
       });
-  
+
       const recipientSocketId = connectedUsers.get(recipientId);
-  
+
       // إذا كان المستقبل متصلًا، أرسل له الرسالة فورًا
       if (recipientSocketId) {
         io.to(recipientSocketId).emit('private:new', {
@@ -60,8 +61,9 @@ module.exports = (socket, io) => {
           username: socket.user.username,
           timestamp: newMessage.timestamp,
         });
+        await newMessage.updateOne({ isSent: true });
       }
-  
+
       // رد للمُرسل بأن الرسالة تم حفظها بنجاح
       callback({
         success: true,
@@ -73,4 +75,4 @@ module.exports = (socket, io) => {
       callback({ success: false, message: 'Error sending message' });
     }
   });
-  };
+};

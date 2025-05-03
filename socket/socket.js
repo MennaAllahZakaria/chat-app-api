@@ -3,7 +3,7 @@ const joinRoom = require('./joinRoomService');
 const sendMessage = require('./sendMessageServise');
 const typingIndicator = require('./typingIndicatorService');
 const connectedUsers = require('../utils/userSocketMap');
-const { getUnsentMessagesForUser, markMessagesAsSent } = require('../services/messageService'); 
+const { getUnsentMessagesForUser, markMessagesAsSent, getAllMessagesBetweenUsers } = require('../services/messageService');
 
 module.exports = async (io) => {
   io.use(async (socket, next) => {
@@ -24,8 +24,8 @@ module.exports = async (io) => {
     connectedUsers.set(userId, socket.id);
     console.log(`✅ Connected: ${userId} -> ${socket.id}`);
 
-    // تحقق إذا كان هناك رسائل غير مرسلة لهذا المستخدم
     try {
+      // تحقق إذا كان هناك رسائل غير مرسلة لهذا المستخدم
       const unsentMessages = await getUnsentMessagesForUser(userId);
 
       if (unsentMessages.length > 0) {
@@ -45,6 +45,24 @@ module.exports = async (io) => {
       }
     } catch (error) {
       console.error('Error fetching unsent messages:', error);
+    }
+
+    try {
+      // جلب الرسائل بين المستخدمين
+      const allMessages = await getAllMessagesBetweenUsers(userId);
+
+      // إرسال جميع الرسائل للمستخدم عند دخوله المحادثة
+      allMessages.forEach(message => {
+        socket.emit('private:new', {
+          senderId: message.senderId,
+          recipientId: message.recipientId,
+          content: message.content,
+          username: message.username,
+          timestamp: message.timestamp,
+        });
+      });
+    } catch (error) {
+      console.error('Error fetching all messages:', error);
     }
 
     // خدمات أخرى مثل الانضمام إلى الغرف، إرسال الرسائل، وغيرها
