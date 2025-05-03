@@ -48,6 +48,7 @@ const io = socketIo(server, {
 });
 
 // Connect to DB
+console.log('Attempting to connect to database...');
 dbConnection();
 
 const Verification = require("./models/codeModel");
@@ -92,9 +93,13 @@ app.all('*', (req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
+console.log(`Starting server on port ${PORT}...`);
+console.log(`Environment: ${process.env.NODE_ENV}`);
+console.log(`Database URI: ${process.env.DB_URI ? 'Set' : 'Not set'}`);
 
 server.listen(PORT, () => {
   console.log(`App Running on port ${PORT}`);
+  console.log(`Server is ready to accept connections`);
 });
 
 // Handle unhandled rejections
