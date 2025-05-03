@@ -47,7 +47,6 @@ module.exports = (socket, io) => {
         senderId: userId,
         recipientId,
         content,
-        isSent: false, 
       });
 
       const recipientSocketId = connectedUsers.get(recipientId);
@@ -61,7 +60,6 @@ module.exports = (socket, io) => {
           username: socket.user.username,
           timestamp: newMessage.timestamp,
         });
-        await newMessage.updateOne({ isSent: true });
       }
 
       // رد للمُرسل بأن الرسالة تم حفظها بنجاح
