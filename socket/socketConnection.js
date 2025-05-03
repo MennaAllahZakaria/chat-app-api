@@ -13,8 +13,9 @@ class SocketConnection {
     }
 
     this.token = token;
+    const socketUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-    this.socket = io('http://localhost:5000', {
+    this.socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket'],
       reconnection: true,

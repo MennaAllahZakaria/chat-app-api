@@ -64,6 +64,7 @@ module.exports = (socket, io) => {
 
   socket.on('private:send', async ({ recipientId, content }, callback) => {
     try {
+      console.log('🔥 Received private:send from:', socket.user._id);
       if (!recipientId || !content || content.trim() === '') {
         return callback({ success: false, message: 'Recipient ID and content are required' });
       }
