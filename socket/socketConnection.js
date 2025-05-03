@@ -1,5 +1,4 @@
 const io = require('socket.io-client');
-const jwt = require('jsonwebtoken');
 
 class SocketConnection {
   constructor() {
@@ -8,7 +7,6 @@ class SocketConnection {
     this.token = null;
   }
 
-  // Initialize socket connection
   connect(token) {
     if (!token) {
       throw new Error('Token is required for socket connection');
@@ -16,25 +14,20 @@ class SocketConnection {
 
     this.token = token;
 
-    // Create socket connection with authentication
     this.socket = io('http://localhost:5000', {
-      auth: {
-        token: token
-      },
+      auth: { token },
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000
     });
 
-    // Set up event listeners
     this.setupEventListeners();
   }
 
   setupEventListeners() {
     if (!this.socket) return;
 
-    // Connection events
     this.socket.on('connect', () => {
       console.log('Socket connected successfully');
       this.isConnected = true;
@@ -50,12 +43,10 @@ class SocketConnection {
       this.isConnected = false;
     });
 
-    // Authentication error
     this.socket.on('error', (error) => {
       console.error('Socket error:', error);
     });
 
-    // Message events
     this.socket.on('message:new', (message) => {
       console.log('New message received:', message);
     });
@@ -64,56 +55,47 @@ class SocketConnection {
       console.log('New private message received:', message);
     });
 
-    // Typing indicator events
     this.socket.on('typing', (data) => {
       console.log('Typing indicator:', data);
     });
   }
 
-  // Join a room
   joinRoom(roomId) {
-    if (!this.isConnected) {
-      throw new Error('Socket is not connected');
-    }
+    if (!this.isConnected) throw new Error('Socket is not connected');
     this.socket.emit('room:join', { roomId });
   }
 
-  // Send a message to a room
-  sendMessage(roomId, content) {
-    if (!this.isConnected) {
-      throw new Error('Socket is not connected');
-    }
-    this.socket.emit('message:send', { roomId, content });
-  }
-
-  // Send a private message
-  sendPrivateMessage(recipientId, content, callback) {
-    if (!this.isConnected) {
-      throw new Error('Socket is not connected');
-    }
-    this.socket.emit('private:send', { recipientId, content }, (response) => {
-      if (callback) callback(response); 
+  sendMessage(roomId, content, callback) {
+    if (!this.isConnected) throw new Error('Socket is not connected');
+    this.socket.emit('message:send', { roomId, content }, (response) => {
+      if (callback) callback(response);
     });
   }
-  
 
-  // Start typing indicator
-  startTyping(roomId) {
+  sendPrivateMessage(recipientId, content, callback) {
+    if (!this.isConnected) throw new Error('Socket is not connected');
+    this.socket.emit('private:send', { recipientId, content }, (response) => {
+      if (callback) callback(response);
+    });
+  }
+
+  // Start typing indicator (room or private)
+  startTyping(contextId, type = 'room') {
     if (!this.isConnected) {
       throw new Error('Socket is not connected');
     }
-    this.socket.emit('typing:start', { roomId });
+    this.socket.emit('typing:start', { contextId, type });
   }
 
-  // Stop typing indicator
-  stopTyping(roomId) {
+  // Stop typing indicator (room or private)
+  stopTyping(contextId, type = 'room') {
     if (!this.isConnected) {
       throw new Error('Socket is not connected');
     }
-    this.socket.emit('typing:stop', { roomId });
+    this.socket.emit('typing:stop', { contextId, type });
   }
 
-  // Disconnect socket
+
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
@@ -123,4 +105,4 @@ class SocketConnection {
   }
 }
 
-module.exports = new SocketConnection(); 
+module.exports = new SocketConnection();
