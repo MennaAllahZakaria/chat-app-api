@@ -1,8 +1,8 @@
 const { createMessageSocket, createPrivateMessageSocket } = require('../services/messageService');
-const userSocketMap = require('../utils/userSocketMap'); 
+const connectedUsers = require('../utils/userSocketMap'); // استيراد Map
 
 module.exports = (socket, io) => {
-  // 🟢 Message to Room
+  // 🟢 إرسال رسالة إلى الغرفة
   socket.on('message:send', async ({ roomId, content }, callback) => {
     try {
       const newMessage = await createMessageSocket({
@@ -32,7 +32,7 @@ module.exports = (socket, io) => {
     }
   });
 
-  // 🟣 Private Message
+  // 🟣 إرسال رسالة خاصة
   socket.on('private:send', async ({ recipientId, content }, callback) => {
     try {
       if (!recipientId || !content || content.trim() === '') {
@@ -40,18 +40,18 @@ module.exports = (socket, io) => {
       }
       const userId = socket.user._id;
       console.log(`Sending private message from ${userId} to ${recipientId}`);
-  
+
       // تحقق من الاتصال قبل إرسال الرسالة
-      const recipientSocketId = userSocketMap[recipientId];
+      const recipientSocketId = connectedUsers.get(recipientId); // استخدام Map بدلاً من userSocketMap
       if (recipientSocketId) {
         console.log(`Recipient is connected: ${recipientId}`);
-        
+
         const newMessage = await createPrivateMessageSocket({
           senderId: userId,
           recipientId,
           content,
         });
-  
+
         io.to(recipientSocketId).emit('private:receive', {
           senderId: userId,
           recipientId,
@@ -59,7 +59,7 @@ module.exports = (socket, io) => {
           username: socket.user.username,
           timestamp: newMessage.timestamp,
         });
-  
+
         callback({
           success: true,
           message: 'Message sent successfully',
@@ -73,5 +73,19 @@ module.exports = (socket, io) => {
       console.error('Private message error:', error);
       callback({ success: false, message: 'An error occurred while sending the private message' });
     }
+  });
+
+  // عند الاتصال، إضافة المستخدم إلى الـ Map
+  io.on('connection', (socket) => {
+    const userId = socket.user._id;
+    connectedUsers.set(userId, socket.id); // حفظ الـ socket.id للمستخدم في الـ Map
+
+    console.log(`User connected: ${userId} -> ${socket.id}`);
+
+    // عند الانقطاع، حذف الـ socket.id من الـ Map
+    socket.on('disconnect', () => {
+      connectedUsers.delete(userId);
+      console.log(`User disconnected: ${userId}`);
+    });
   });
 };

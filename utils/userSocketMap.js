@@ -1,2 +1,3 @@
-const userSocketMap = {};
-module.exports = userSocketMap;
+const connectedUsers = new Map();
+
+module.exports = connectedUsers;
