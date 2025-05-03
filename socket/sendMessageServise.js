@@ -35,19 +35,23 @@ module.exports = (socket, io) => {
   // 🟣 إرسال رسالة خاصة
   socket.on('private:send', async ({ recipientId, content }, callback) => {
     try {
+      // تحقق من وجود recipientId و content
       if (!recipientId || !content || content.trim() === '') {
         return callback({ success: false, message: 'Recipient ID and content are required' });
       }
-
+  
       const userId = socket.user._id;
-      const recipientSocketId = connectedUsers.get(recipientId);
-
+  
+      // تخزين الرسالة في الداتا بيز
       const newMessage = await createPrivateMessageSocket({
         senderId: userId,
         recipientId,
         content,
       });
-
+  
+      const recipientSocketId = connectedUsers.get(recipientId);
+  
+      // إذا كان المستقبل متصلًا، أرسل له الرسالة فورًا
       if (recipientSocketId) {
         io.to(recipientSocketId).emit('private:new', {
           senderId: userId,
@@ -57,7 +61,8 @@ module.exports = (socket, io) => {
           timestamp: newMessage.timestamp,
         });
       }
-
+  
+      // رد للمُرسل بأن الرسالة تم حفظها بنجاح
       callback({
         success: true,
         message: 'Message saved successfully',
@@ -68,5 +73,4 @@ module.exports = (socket, io) => {
       callback({ success: false, message: 'Error sending message' });
     }
   });
-
-};
+  };

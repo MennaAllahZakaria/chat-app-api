@@ -49,6 +49,33 @@ exports.createPrivateMessageSocket = async ({ senderId, recipientId, content }) 
     });
     return privateMessage;
 };
+
+    // خدمة للحصول على الرسائل غير المرسلة للمستقبل
+    exports.getUnsentMessagesForUser = async (recipientId) => {
+        try {
+        const unsentMessages = await Message.find({
+            recipientId: recipientId,
+            isSent: false, // التأكد أن الرسائل لم تُرسل بعد
+        });
+        return unsentMessages;
+        } catch (error) {
+        console.error("Error fetching unsent messages:", error);
+        return [];
+        }
+    };
+    // خدمة لتحديث الرسائل لتصبح مرسلة بعد إرسالها
+    exports.markMessagesAsSent = async (messages) => {
+        try {
+        const messageIds = messages.map(msg => msg._id);
+        await Message.updateMany(
+            { _id: { $in: messageIds } },
+            { $set: { isSent: true } } // تحديث الحالة إلى "تم الإرسال"
+        );
+        } catch (error) {
+        console.error("Error marking messages as sent:", error);
+        }
+    };
+    
 //---------------------------------GET ONE--------------------------------
 
 // @desc    Get specific Message by id

@@ -17,7 +17,11 @@ const privateMessageSchema=new mongoose.Schema({
     createdAt:{
         type:Date,
         default:Date.now
-    }
+    },
+    isSent: { 
+        type: Boolean, 
+        default: false 
+    },
 
 },{timestamps:true}
 );
