@@ -1,4 +1,6 @@
 const crypto = require('crypto');
+const CryptoJS = require("crypto-js");
+
 const asyncHandler=require("express-async-handler");
 const jwt=require("jsonwebtoken")
 const bcrypt=require("bcryptjs");
@@ -214,8 +216,8 @@ exports.protectforget = asyncHandler(async (req, res, next) => {
     );
     }
     //2) verify token (no change happens, expired token)
-    token = CryptoJs.AES.decrypt(token, process.env.HASH_PASS);
-    token = token.toString(CryptoJs.enc.Utf8);
+    token = CryptoJS.AES.decrypt(token, process.env.HASH_PASS);
+    token = token.toString(CryptoJS.enc.Utf8);
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     //3) check if user exists
     const currentUser = await User.findById(decoded.userId);
@@ -315,7 +317,7 @@ user.passwordResetVerified = false;
 
 await user.save();
 
-const message = `Hi ${user.firstName} ${user.lastName},\nWe received a  request to reset the password on your CareNest Account. \n${resetCode} \nEnter this code to complete the reset. \nThanks for helping us keep your account secure.\nThe CareNest Team `;
+const message = `Hi ${user.firstName} ${user.lastName},\nWe received a  request to reset the password on your CareNest Account. \n${resetCode} \nEnter this code to complete the reset. \nThanks for helping us keep your account secure.\nThe ChatApp Team `;
 //3) Send the reset code via email
 try {
     await sendEmail({
@@ -323,17 +325,17 @@ try {
     subject: "Your password reset code (valid for 10 min)",
     message,
     });
-} catch {
+} catch (error) {
     user.passwordResetCode = undefined;
     user.passwordResetExpires = undefined;
     user.passwordResetVerified = undefined;
 
     await user.save();
-    return next(new ApiError("There is an error in sending email", 500));
+    return next(new ApiError("There is an error in sending email"+error, 500));
 }
 token = createToken(user._id);
 
-token = CryptoJs.AES.encrypt(token, process.env.HASH_PASS).toString();
+token = CryptoJS.AES.encrypt(token, process.env.HASH_PASS).toString();
 res
     .status(200)
     .json({ status: "Success", message: "Reset code sent to email", token });
@@ -343,37 +345,49 @@ res
 // @route   POST /api/v1/auth/verifyResetCode
 // @access  Public
 
-exports.verifyPassResetCode=asyncHandler(async (req, res, next) => {
-    //1)Get user based on reset code
-    const hashResetCode = crypto
-    .createHash("sha256")
-    .update(req.body.resetCode)
-    .digest("hex");
 
-    const user = await User.findById(req.user._id);
-    if (
-    user.passwordResetCode != hashResetCode ||
-    user.passwordResetExpires <= Date.now()
-    ) {
-    return next(new ApiError("Reset code invalid or expired"), 401);
-    }
-    // const user = await User.findOne({
-    //   passwordResetCode: hashResetCode,
-    //   passwordResetExpires: { $gt: Date.now() },
-    // });
-    // if (!user) {
-    //   return next(new ApiError("Reset code invalid or expired"));
-    // }
-
-    //2) Reset code valid
-    user.passwordResetVerified = true;
-    await user.save();
-    const token = req.headers.authorization;
-
-    res.status(200).json({
-    status: "Success",
-    token,
-    });
+exports.verifyPassResetCode = asyncHandler(async (req, res, next) => {
+        // 1) Get user based on reset code
+        const hashResetCode = crypto
+        .createHash("sha256")
+        .update(req.body.resetCode)
+        .digest("hex");
+    
+        const user = await User.findById(req.user._id);
+    
+        if (
+        user.passwordResetCode !== hashResetCode ||
+        user.passwordResetExpires <= Date.now()
+        ) {
+        return next(new ApiError("Reset code invalid or expired", 401));
+        }
+    
+        // 2) Reset code is valid
+        user.passwordResetVerified = true;
+        await user.save();
+    
+        // 3) Decrypt the token (if needed)
+        let decryptedToken = null;
+        try {
+        const token = req.headers.authorization?.split(" ")[1]; // Bearer TOKEN
+        if (!token) {
+            return next(new ApiError("Token not found in Authorization header", 401));
+        }
+    
+        const bytes = CryptoJS.AES.decrypt(token, process.env.HASH_PASS);
+        decryptedToken = bytes.toString(CryptoJS.enc.Utf8);
+    
+        if (!decryptedToken) {
+            return next(new ApiError("Invalid or corrupted token", 401));
+        }
+        } catch (err) {
+        return next(new ApiError("Token decryption failed", 500));
+        }
+    
+        res.status(200).json({
+        status: "Success",
+        token: decryptedToken,
+        });
 });
 
 

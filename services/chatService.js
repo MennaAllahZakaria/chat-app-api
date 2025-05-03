@@ -48,7 +48,7 @@ exports.getPrivateChatstHistory=asyncHandler(async(req,res,next)=>{
     const user=await User.findById(userId);
     if(!user) return next(new ApiError('User not found',404));
 
-    const messages=PrivateMessage.find({
+    const messages=await PrivateMessage.find({
         $or: [
             { $and: [{ senderId: loggedUserId }, { recipientId: userId }] },
             { $and: [{ senderId: userId }, { recipientId: loggedUserId }] }
