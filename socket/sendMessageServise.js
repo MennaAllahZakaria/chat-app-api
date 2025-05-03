@@ -42,7 +42,7 @@ module.exports = (socket, io) => {
       console.log(`Sending private message from ${userId} to ${recipientId}`);
 
       // تحقق من الاتصال قبل إرسال الرسالة
-      const recipientSocketId = connectedUsers.get(recipientId); // استخدام Map بدلاً من userSocketMap
+      const recipientSocketId = connectedUsers.get(recipientId); 
       if (recipientSocketId) {
         console.log(`Recipient is connected: ${recipientId}`);
 
@@ -52,7 +52,7 @@ module.exports = (socket, io) => {
           content,
         });
 
-        io.to(recipientSocketId).emit('private:receive', {
+        io.to(recipientSocketId).emit('private:new', {
           senderId: userId,
           recipientId,
           content: content.trim(),
