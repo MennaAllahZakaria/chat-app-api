@@ -45,18 +45,18 @@ module.exports = (socket, io) => {
     }
   });
 
-  socket.on('private:send', async ({ recipientId, content }) => {
+  socket.on('private:send', async ({ recipientId, content }, callback) => {
     try {
       if (!recipientId || !content || content.trim() === '') {
-        return socket.emit('error', `Recipient ID and content are required ${recipientId} , ${content}`);
+        return callback?.({ success: false, message: 'Recipient ID and content are required' });
       }
-
+  
       const newMessage = await createPrivateMessageSocket({
         senderId: socket.user._id,
         recipientId,
         content,
       });
-
+  
       io.to(recipientId).emit('private:receive', {
         senderId: socket.user._id,
         recipientId,
@@ -64,10 +64,19 @@ module.exports = (socket, io) => {
         username: socket.user.username,
         timestamp: newMessage.timestamp,
       });
+  
+      // ✅ Send success callback to sender
+      callback?.({
+        success: true,
+        message: 'Message sent successfully',
+        data: newMessage,
+      });
     } catch (error) {
-      socket.emit('error', 'An error occurred while sending the private message');
+      console.error('Private message error:', error);
+      callback?.({ success: false, message: 'An error occurred while sending the private message' });
     }
   });
+  
 
   // When user logs in and gets a token
   const token = 'YOUR_JWT_TOKEN'; // Get this from your login response
