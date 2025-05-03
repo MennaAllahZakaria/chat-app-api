@@ -293,7 +293,7 @@ exports.protectCode = asyncHandler(async (req, res, next) => {
 
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
 //1)get user by email
-const user = await User.findOne({ Email: req.body.Email });
+const user = await User.findOne({ email: req.body.email });
 
 if (!user) {
     return next(
@@ -319,7 +319,7 @@ const message = `Hi ${user.firstName} ${user.lastName},\nWe received a  request 
 //3) Send the reset code via email
 try {
     await sendEmail({
-    Email: user.Email,
+    email: user.email,
     subject: "Your password reset code (valid for 10 min)",
     message,
     });
