@@ -3,10 +3,10 @@ const joinRoom = require('./joinRoomService');
 const sendMessage = require('./sendMessageServise');
 const typingIndicator = require('./typingIndicatorService');
 const connectedUsers = require('../utils/userSocketMap');
-const { getUnsentMessagesForUser, markMessagesAsSent, getAllMessagesBetweenUsers } = require('../services/messageService');
+const { getAllMessagesBetweenUsers } = require('../services/messageService');
 
-module.exports = async (io) => {
-  io.use(async (socket, next) => {
+module.exports = (io) => {
+  io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('Token is required'));
 
@@ -20,31 +20,33 @@ module.exports = async (io) => {
   });
 
   io.on('connection', async (socket) => {
-    const userId = socket.user._id;
+    const user = socket.user?.user; 
+    const userId = user?.id;        
+
+    if (!userId) {
+      console.error('❌ Connection failed: Missing user ID from token payload');
+      return socket.disconnect();
+    }
+
     connectedUsers.set(userId, socket.id);
     console.log(`✅ Connected: ${userId} -> ${socket.id}`);
 
-    
-
     try {
-      // جلب الرسائل بين المستخدمين
       const allMessages = await getAllMessagesBetweenUsers(userId);
 
-      // إرسال جميع الرسائل للمستخدم عند دخوله المحادثة
-      allMessages.forEach(message => {
+      allMessages.forEach((message) => {
         socket.emit('private:new', {
           senderId: message.senderId,
           recipientId: message.recipientId,
           content: message.content,
-          username: message.username,
+          username: message.username || 'Unknown',
           timestamp: message.timestamp,
         });
       });
     } catch (error) {
-      console.error('Error fetching all messages:', error);
+      console.error('❌ Error fetching all messages:', error);
     }
 
-    // خدمات أخرى مثل الانضمام إلى الغرف، إرسال الرسائل، وغيرها
     joinRoom(socket);
     sendMessage(socket, io);
     typingIndicator(socket, io);
