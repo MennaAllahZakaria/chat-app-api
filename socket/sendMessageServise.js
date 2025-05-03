@@ -23,15 +23,18 @@ module.exports = (socket, io) => {
     userId: socket.user._id,
     username: socket.user.username
   });
-
-  socket.on('message:send', async ({ roomId, content }) => {
+  socket.on('message:send', async ({ roomId, content }, callback) => {
     try {
+      console.log(`Message sending... Room ID: ${roomId}, Content: ${content}`);
+  
       const newMessage = await createMessageSocket({
         roomId,
         userId: socket.user._id,
         content,
       });
-
+  
+      console.log(`New message created:`, newMessage);
+  
       // Broadcast the message to the room
       io.to(roomId).emit('message:receive', {
         roomId,
@@ -40,15 +43,29 @@ module.exports = (socket, io) => {
         username: socket.user.username,
         timestamp: newMessage.timestamp,
       });
+  
+      // ✅ Send success callback to sender
+      if (callback) {
+        callback({
+          success: true,
+          message: 'Message sent successfully',
+          data: newMessage,
+        });
+      } else {
+        console.error('No callback function provided');
+      }
+  
     } catch (error) {
+      console.error('Error while sending message:', error);
       socket.emit('error', 'An error occurred while sending the message');
     }
   });
+  
 
   socket.on('private:send', async ({ recipientId, content }, callback) => {
     try {
       if (!recipientId || !content || content.trim() === '') {
-        return callback?.({ success: false, message: 'Recipient ID and content are required' });
+        return callback({ success: false, message: 'Recipient ID and content are required' });
       }
   
       const newMessage = await createPrivateMessageSocket({
@@ -66,42 +83,20 @@ module.exports = (socket, io) => {
       });
   
       // ✅ Send success callback to sender
-      callback?.({
+      callback({
         success: true,
         message: 'Message sent successfully',
         data: newMessage,
       });
+  
     } catch (error) {
       console.error('Private message error:', error);
-      callback?.({ success: false, message: 'An error occurred while sending the private message' });
+  
+      // ✅ Send error callback to sender
+      callback({ success: false, message: 'An error occurred while sending the private message' });
     }
   });
   
+  
 
-  // When user logs in and gets a token
-  const token = 'YOUR_JWT_TOKEN'; // Get this from your login response
-
-  // Connect to socket
-  try {
-    socketConnection.connect(token);
-  } catch (error) {
-    console.error('Failed to connect to socket:', error);
-  }
-
-  // Join a room
-  socketConnection.joinRoom('roomId');
-
-  // Send a message
-  socketConnection.sendMessage('roomId', 'Hello everyone!');
-
-  // Send a private message
-  socketConnection.sendPrivateMessage('recipientId', 'Hello!');
-
-  // Typing indicators
-  socketConnection.startTyping('roomId');
-  // ... when user stops typing
-  socketConnection.stopTyping('roomId');
-
-  // Disconnect when needed
-  socketConnection.disconnect();
 };
