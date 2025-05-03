@@ -24,6 +24,7 @@ module.exports = (io) => {
     const userId = user?.id;        
 
     if (!userId) {
+      console.log(token);
       console.error('❌ Connection failed: Missing user ID from token payload');
       return socket.disconnect();
     }
