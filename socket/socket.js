@@ -2,9 +2,10 @@ const jwt = require('jsonwebtoken');
 const joinRoom = require('./joinRoomService');
 const sendMessage = require('./sendMessageServise');
 const typingIndicator = require('./typingIndicatorService');
+const userSocketMap = require('../utils/userSocketMap'); 
 
 module.exports = (io) => {
-  // Authentication middleware
+  // ✅ Authentication middleware
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) {
@@ -20,28 +21,32 @@ module.exports = (io) => {
     }
   });
 
-  // Connection handling
+  // ✅ Connection handling
   io.on('connection', (socket) => {
-    console.log(`User connected: ${socket.id} (${socket.user.username})`);
+    const userId = socket.user._id;
+    userSocketMap[userId] = socket.id; // ✅ حفظ socket.id للمستخدم
 
-    // Send connection verification
+    console.log(`✅ User connected: ${socket.id} (${socket.user.username})`);
+
+    // ✅ Emit connection verified
     socket.emit('connection:verified', {
       status: 'connected',
-      userId: socket.user._id,
-      username: socket.user.username
+      userId,
+      username: socket.user.username,
     });
 
-    // Handle different events
+    // ✅ Handle different events
     joinRoom(socket);           
     sendMessage(socket, io);    
     typingIndicator(socket, io);  
 
-    // Disconnect event
+    // 🔴 Disconnect
     socket.on('disconnect', (reason) => {
-      console.log(`User disconnected: ${socket.id} (${socket.user.username}) - Reason: ${reason}`);
+      delete userSocketMap[userId]; // ✅ إزالة socket.id عند فصل الاتصال
+      console.log(`❌ User disconnected: ${socket.id} (${socket.user.username}) - Reason: ${reason}`);
     });
 
-    // Error handling
+    // 🛑 Error handling
     socket.on('error', (error) => {
       console.error(`Socket error for user ${socket.user.username}:`, error);
       socket.emit('error', error.message);

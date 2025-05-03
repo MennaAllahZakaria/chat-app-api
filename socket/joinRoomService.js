@@ -1,23 +1,22 @@
-const Room = require('../models/roomModel');
-const mongoose = require('mongoose');
+const userSocketMap = require('../utils/userSocketMap');
 
 module.exports = (socket) => {
-  socket.on('room:join', async ({ roomId }) => {
-    try {
-      if (!mongoose.Types.ObjectId.isValid(roomId)) {
-        socket.emit('error', 'Invalid Room ID');
-        return;
-      }
-      const room = await Room.findById(roomId);
-      if (room) {
-        socket.join(roomId);
-        console.log(`User joined room: ${roomId}`);
-      } else {
-        socket.emit('error', 'Room not found');
-      }
-    } catch (error) {
-      console.error('Error joining room:', error);
-      socket.emit('error', error.message || 'An error occurred while joining the room');
-    }
+  socket.on('room:join', ({ roomId }) => {
+    if (!roomId) return socket.emit('error', 'Room ID is required');
+
+    socket.join(roomId);
+    console.log(`${socket.user.username} joined room ${roomId}`);
+
+    // ممكن تبعتي إشعار للأونلاين يوزرز (اختياري)
+    const userId = socket.user._id;
+    const socketId = userSocketMap[userId];
+
+    socket.to(roomId).emit('room:userJoined', {
+      userId,
+      username: socket.user.username,
+      socketId,
+    });
+
+    socket.emit('room:joined', { roomId });
   });
 };

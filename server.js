@@ -20,11 +20,17 @@ const mountRoutes = require('./routes/index');
 // Express app
 const app = express();
 
-// CORS configuration
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
-}));
+// CORS configuration: Allow requests from development and production environments
+const corsOptions = {
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:3000',  // التطوير
+    process.env.REACT_APP_API_URL  // الإنتاج على Railway
+  ],
+  credentials: true,  // السماح باستخدام الكوكيز
+};
+
+// Use CORS middleware
+app.use(cors(corsOptions));
 
 // Middleware
 app.use(express.json());
@@ -40,11 +46,11 @@ const io = socketIo(server, {
   cors: {
     origin: process.env.CLIENT_URL || 'http://localhost:3000',
     methods: ["GET", "POST"],
-    credentials: true
+    credentials: true,
   },
   transports: ['websocket', 'polling'],
   pingTimeout: 60000,
-  pingInterval: 25000
+  pingInterval: 25000,
 });
 
 // Connect to DB
@@ -54,28 +60,28 @@ dbConnection();
 const Verification = require("./models/codeModel");
 
 const deleteExpiredVerifications = async () => {
-    const now = new Date();
+  const now = new Date();
 
-    try {
-        // Find all expired records
-        const expiredVerifications = await Verification.find({
-        expiresAt: { $lt: now },
-        });
+  try {
+    // Find all expired records
+    const expiredVerifications = await Verification.find({
+      expiresAt: { $lt: now },
+    });
 
-        // Delete all expired records
-        await Verification.deleteMany({
-        _id: { $in: expiredVerifications.map((v) => v._id) },
-        });
+    // Delete all expired records
+    await Verification.deleteMany({
+      _id: { $in: expiredVerifications.map((v) => v._id) },
+    });
 
-        console.log(
-        `${expiredVerifications.length} expired verifications deleted.`
-        );
-    } catch (err) {
-        console.error("Error deleting expired verifications:", err);
-    }
+    console.log(
+      `${expiredVerifications.length} expired verifications deleted.`
+    );
+  } catch (err) {
+    console.error("Error deleting expired verifications:", err);
+  }
 };
 
-// Call the function
+// Call the function to clean up expired verification codes
 deleteExpiredVerifications();
 
 // Mount routes

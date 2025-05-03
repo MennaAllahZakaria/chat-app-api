@@ -1,44 +1,19 @@
 const { createMessageSocket, createPrivateMessageSocket } = require('../services/messageService');
-
-// خريطة لتخزين socket.id مقابل userId
-const userSocketMap = {};
+const userSocketMap = require('../utils/userSocketMap'); 
 
 module.exports = (socket, io) => {
-  // Verify connection and authentication
-  if (!socket.connected) {
-    console.error('Socket is not connected');
-    return;
-  }
-
-  if (!socket.user || !socket.user._id) {
-    console.error('Socket is not authenticated');
-    socket.emit('error', 'Authentication required');
-    return;
-  }
-
-  const userId = socket.user._id;
-  userSocketMap[userId] = socket.id;
-
-  console.log(`✅ Socket connected for user: ${socket.user.username} (${userId})`);
-
-  socket.emit('connection:verified', {
-    status: 'connected',
-    userId,
-    username: socket.user.username,
-  });
-
   // 🟢 Message to Room
   socket.on('message:send', async ({ roomId, content }, callback) => {
     try {
       const newMessage = await createMessageSocket({
         roomId,
-        userId,
+        userId: socket.user._id,
         content,
       });
 
       io.to(roomId).emit('message:receive', {
         roomId,
-        userId,
+        userId: socket.user._id,
         content,
         username: socket.user.username,
         timestamp: newMessage.timestamp,
@@ -65,15 +40,15 @@ module.exports = (socket, io) => {
       }
 
       const newMessage = await createPrivateMessageSocket({
-        senderId: userId,
+        senderId: socket.user._id,
         recipientId,
         content,
       });
 
-      const recipientSocketId = userSocketMap[recipientId];
+      const recipientSocketId = userSocketMap[recipientId]; // نستخدم الماب للحصول على الـ socket.id للمستقبل
       if (recipientSocketId) {
         io.to(recipientSocketId).emit('private:receive', {
-          senderId: userId,
+          senderId: socket.user._id,
           recipientId,
           content: content.trim(),
           username: socket.user.username,
@@ -92,12 +67,5 @@ module.exports = (socket, io) => {
       console.error('Private message error:', error);
       callback({ success: false, message: 'An error occurred while sending the private message' });
     }
-  });
-
-
-  // 🔴 Handle disconnect
-  socket.on('disconnect', () => {
-    delete userSocketMap[userId];
-    console.log(`❌ User disconnected: ${userId}`);
   });
 };

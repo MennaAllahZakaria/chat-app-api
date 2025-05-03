@@ -13,14 +13,14 @@ class SocketConnection {
     }
 
     this.token = token;
-    const socketUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+    const socketUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000'; 
 
     this.socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionDelay: 1000,
     });
 
     this.setupEventListeners();
@@ -80,22 +80,25 @@ class SocketConnection {
     });
   }
 
-  // Start typing indicator (room or private)
   startTyping(contextId, type = 'room') {
     if (!this.isConnected) {
       throw new Error('Socket is not connected');
     }
+    if (!contextId) {
+      throw new Error('contextId is required');
+    }
     this.socket.emit('typing:start', { contextId, type });
   }
 
-  // Stop typing indicator (room or private)
   stopTyping(contextId, type = 'room') {
     if (!this.isConnected) {
       throw new Error('Socket is not connected');
     }
+    if (!contextId) {
+      throw new Error('contextId is required');
+    }
     this.socket.emit('typing:stop', { contextId, type });
   }
-
 
   disconnect() {
     if (this.socket) {
