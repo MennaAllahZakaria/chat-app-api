@@ -1,5 +1,7 @@
-const { createMessageSocket,createPrivateMessageSocket } = require('../services/messageService');
-const socketConnection = require('./socketConnection');
+const { createMessageSocket, createPrivateMessageSocket } = require('../services/messageService');
+
+// خريطة لتخزين socket.id مقابل userId
+const userSocketMap = {};
 
 module.exports = (socket, io) => {
   // Verify connection and authentication
@@ -14,90 +16,88 @@ module.exports = (socket, io) => {
     return;
   }
 
-  // Log successful connection
-  console.log(`Socket connected for user: ${socket.user.username} (${socket.user._id})`);
+  const userId = socket.user._id;
+  userSocketMap[userId] = socket.id;
 
-  // Connection verification event
-  socket.emit('connection:verified', { 
+  console.log(`✅ Socket connected for user: ${socket.user.username} (${userId})`);
+
+  socket.emit('connection:verified', {
     status: 'connected',
-    userId: socket.user._id,
-    username: socket.user.username
+    userId,
+    username: socket.user.username,
   });
+
+  // 🟢 Message to Room
   socket.on('message:send', async ({ roomId, content }, callback) => {
     try {
-      console.log(`Message sending... Room ID: ${roomId}, Content: ${content}`);
-  
       const newMessage = await createMessageSocket({
         roomId,
-        userId: socket.user._id,
+        userId,
         content,
       });
-  
-      console.log(`New message created:`, newMessage);
-  
-      // Broadcast the message to the room
+
       io.to(roomId).emit('message:receive', {
         roomId,
-        userId: socket.user._id,
+        userId,
         content,
         username: socket.user.username,
         timestamp: newMessage.timestamp,
       });
-  
-      // ✅ Send success callback to sender
+
       if (callback) {
         callback({
           success: true,
           message: 'Message sent successfully',
           data: newMessage,
         });
-      } else {
-        console.error('No callback function provided');
       }
-  
     } catch (error) {
       console.error('Error while sending message:', error);
       socket.emit('error', 'An error occurred while sending the message');
     }
   });
-  
 
+  // 🟣 Private Message
   socket.on('private:send', async ({ recipientId, content }, callback) => {
     try {
-      console.log('🔥 Received private:send from:', socket.user._id);
       if (!recipientId || !content || content.trim() === '') {
         return callback({ success: false, message: 'Recipient ID and content are required' });
       }
-  
+
       const newMessage = await createPrivateMessageSocket({
-        senderId: socket.user._id,
+        senderId: userId,
         recipientId,
         content,
       });
-  
-      io.to(recipientId).emit('private:receive', {
-        senderId: socket.user._id,
-        recipientId,
-        content: content.trim(),
-        username: socket.user.username,
-        timestamp: newMessage.timestamp,
-      });
-  
-      // ✅ Send success callback to sender
-      callback({
-        success: true,
-        message: 'Message sent successfully',
-        data: newMessage,
-      });
-  
+
+      const recipientSocketId = userSocketMap[recipientId];
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('private:receive', {
+          senderId: userId,
+          recipientId,
+          content: content.trim(),
+          username: socket.user.username,
+          timestamp: newMessage.timestamp,
+        });
+
+        callback({
+          success: true,
+          message: 'Message sent successfully',
+          data: newMessage,
+        });
+      } else {
+        callback({ success: false, message: 'Recipient not connected' });
+      }
     } catch (error) {
       console.error('Private message error:', error);
-  
-      // ✅ Send error callback to sender
       callback({ success: false, message: 'An error occurred while sending the private message' });
     }
   });
-  
-  
 
+
+  // 🔴 Handle disconnect
+  socket.on('disconnect', () => {
+    delete userSocketMap[userId];
+    console.log(`❌ User disconnected: ${userId}`);
+  });
 };
