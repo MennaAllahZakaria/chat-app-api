@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const joinRoom = require('./joinRoomService');
 const sendMessage = require('./sendMessageServise');
-const receiveMessage = require('./receiveMessageService');
 const typingIndicator = require('./typingIndicatorService');
 
 module.exports = (io) => {
@@ -35,7 +34,6 @@ module.exports = (io) => {
     // Handle different events
     joinRoom(socket);           
     sendMessage(socket, io);    
-    receiveMessage(socket, io); 
     typingIndicator(socket, io);  
 
     // Disconnect event

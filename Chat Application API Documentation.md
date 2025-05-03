@@ -808,12 +808,17 @@ The client emits these events to perform specific actions.
     *   **Note:** The server will save the message and send it to the recipient (if connected) via the `private:new` event.
 
 *   **`typing:start`**: To indicate that the user has started typing (in a room or private chat).
-    *   **Required Data:** `{ contextId: string, type: 'room' | 'private' }` (The names `contextId` and `type` are assumed and need confirmation from the backend; it might be `roomId` or `recipientId` directly).
+    *   **Required Data:** `{ contextId: string, type: 'room' | 'private' }`
+            (The `contextId` should be the `roomId` for group chats or `recipientId` for private chats. The type specifies the context.)
     *   **Example:** `socket.emit('typing:start', { contextId: 'room_or_recipient_id', type: 'room' });`
+                    `socket.emit('typing:start', { contextId: 'user123', type: 'private' });`
 
 *   **`typing:stop`**: To indicate that the user has stopped typing.
-    *   **Required Data:** `{ contextId: string, type: 'room' | 'private' }` (Same note as `typing:start`).
+    *   **Required Data:** `{ contextId: string, type: 'room' | 'private' }`
+                            (Same structure as typing:start, used to signal typing has ended.)
     *   **Example:** `socket.emit('typing:stop', { contextId: 'room_or_recipient_id', type: 'room' });`
+                        `socket.emit('typing:stop', { contextId: 'user123', type: 'private' });`
+
 
 ### 7.3. Events Received from Server by Client (Server -> Client)
 

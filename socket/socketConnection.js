@@ -87,12 +87,15 @@ class SocketConnection {
   }
 
   // Send a private message
-  sendPrivateMessage(recipientId, content) {
+  sendPrivateMessage(recipientId, content, callback) {
     if (!this.isConnected) {
       throw new Error('Socket is not connected');
     }
-    this.socket.emit('private:send', { recipientId, content });
+    this.socket.emit('private:send', { recipientId, content }, (response) => {
+      if (callback) callback(response); 
+    });
   }
+  
 
   // Start typing indicator
   startTyping(roomId) {
